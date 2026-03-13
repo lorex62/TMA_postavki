@@ -157,17 +157,18 @@ app.post('/api/submit-delivery', async (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-bot.launch()
-
 app.listen(PORT, () => {
   console.log('')
   console.log('─────────────────────────────────────────')
   console.log(`✅  Express server  →  http://localhost:${PORT}`)
-  console.log(`🤖  Telegram bot    →  running (long-polling)`)
   console.log(`🌐  WebApp URL      →  ${WEBAPP_URL}`)
   console.log('─────────────────────────────────────────')
   console.log('')
 })
+
+bot.launch()
+  .then(() => console.log('🤖  Telegram bot    →  running (long-polling)'))
+  .catch(err => console.error('❌  Bot launch failed (server still running):', err.message))
 
 process.once('SIGINT',  () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
