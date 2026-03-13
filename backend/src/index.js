@@ -1,13 +1,19 @@
+process.stdout.write('[STARTUP] Node.js process started\n')
+
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const { Telegraf } = require('telegraf')
 const ExcelJS = require('exceljs')
 
+process.stdout.write('[STARTUP] All modules loaded\n')
+
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const BOT_TOKEN = process.env.BOT_TOKEN
 const PORT = process.env.PORT || 3000
+
+process.stdout.write(`[STARTUP] PORT=${PORT}, BOT_TOKEN=${BOT_TOKEN ? 'SET' : 'MISSING'}\n`)
 const WEBAPP_URL = process.env.WEBAPP_URL || 'https://your-webapp-url.com'
 
 if (!BOT_TOKEN) {
@@ -157,10 +163,10 @@ app.post('/api/submit-delivery', async (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('')
   console.log('─────────────────────────────────────────')
-  console.log(`✅  Express server  →  http://localhost:${PORT}`)
+  console.log(`✅  Express server  →  http://0.0.0.0:${PORT}`)
   console.log(`🌐  WebApp URL      →  ${WEBAPP_URL}`)
   console.log('─────────────────────────────────────────')
   console.log('')
