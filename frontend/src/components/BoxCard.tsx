@@ -20,9 +20,7 @@ const disabledCls =
 
 export default function BoxCard({ box, catalog, skuNames, onUpdate }: Props) {
   const addItem = () => {
-    const sku = skuNames[0]
-    const cfg = catalog[sku]
-    onUpdate([...box.items, { id: Date.now(), sku, color: cfg.colors[0] ?? '', size: cfg.sizes[0] ?? '', qty: 1 }])
+    onUpdate([...box.items, { id: Date.now(), sku: '', color: '', size: '', qty: 1 }])
   }
 
   const updateItem = (id: number, field: keyof Omit<Item, 'id'>, value: string | number) => {
@@ -31,14 +29,7 @@ export default function BoxCard({ box, catalog, skuNames, onUpdate }: Props) {
         if (item.id !== id) return item
         if (field === 'qty') return { ...item, qty: Math.max(0, Number(value)) }
         if (field === 'sku') {
-          const newSku = String(value)
-          const cfg = catalog[newSku]
-          return {
-            ...item,
-            sku: newSku,
-            color: cfg?.colors[0] ?? '',
-            size: cfg?.sizes[0] ?? '',
-          }
+          return { ...item, sku: String(value), color: '', size: '' }
         }
         return { ...item, [field]: value }
       }),
@@ -66,7 +57,7 @@ export default function BoxCard({ box, catalog, skuNames, onUpdate }: Props) {
         )}
 
         {box.items.map((item, idx) => {
-          const cfg = catalog[item.sku]
+          const cfg = item.sku ? catalog[item.sku] : null
           const hasColors = cfg && cfg.colors.length > 0
           const hasSizes  = cfg && cfg.sizes.length > 0
 
@@ -80,6 +71,7 @@ export default function BoxCard({ box, catalog, skuNames, onUpdate }: Props) {
                   onChange={e => updateItem(item.id, 'sku', e.target.value)}
                   className={activeCls}
                 >
+                  <option value="" disabled>Артикул</option>
                   {skuNames.map(name => (
                     <option key={name} value={name}>{name}</option>
                   ))}
@@ -102,7 +94,8 @@ export default function BoxCard({ box, catalog, skuNames, onUpdate }: Props) {
                     onChange={e => updateItem(item.id, 'color', e.target.value)}
                     className={activeCls}
                   >
-                    {cfg.colors.map(c => (
+                    <option value="" disabled>Цвет</option>
+                    {cfg!.colors.map(c => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
@@ -117,7 +110,8 @@ export default function BoxCard({ box, catalog, skuNames, onUpdate }: Props) {
                     onChange={e => updateItem(item.id, 'size', e.target.value)}
                     className="w-20 shrink-0 text-sm text-gray-900 border border-gray-200 rounded-lg px-2 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
                   >
-                    {cfg.sizes.map(s => (
+                    <option value="" disabled>Размер</option>
+                    {cfg!.sizes.map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>

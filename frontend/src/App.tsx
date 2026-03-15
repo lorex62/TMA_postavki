@@ -24,9 +24,7 @@ function pluralBoxes(n: number): string {
 }
 
 function makeFirstItem(): Item {
-  const sku = SKU_NAMES[0]
-  const cfg = CATALOG[sku]
-  return { id: Date.now(), sku, color: cfg.colors[0] ?? '', size: cfg.sizes[0] ?? '', qty: 1 }
+  return { id: Date.now(), sku: '', color: '', size: '', qty: 1 }
 }
 
 export default function App() {
