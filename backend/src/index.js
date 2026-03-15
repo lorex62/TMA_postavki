@@ -231,9 +231,15 @@ app.post('/api/submit-delivery', async (req, res) => {
     const skuCount = Object.keys(aggregated).length
     const totalQty = Object.values(aggregated).reduce((a, b) => a + b, 0)
 
+    const now = new Date()
+    const dd   = String(now.getDate()).padStart(2, '0')
+    const mm   = String(now.getMonth() + 1).padStart(2, '0')
+    const yyyy = now.getFullYear()
+    const filename = `поставка_${dd}.${mm}.${yyyy}.xlsx`
+
     await bot.telegram.sendDocument(
       userId,
-      { source: buffer, filename: 'Поставка.xlsx' },
+      { source: buffer, filename },
       {
         caption:
           `📦 *Ваш файл поставки сформирован!*\n\n` +

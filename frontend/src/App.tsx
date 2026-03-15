@@ -93,6 +93,8 @@ export default function App() {
     }
   }
 
+  const username = WebApp.initDataUnsafe?.user?.first_name || WebApp.initDataUnsafe?.user?.username || ''
+
   /* ── HOME SCREEN ── */
   if (screen === 'home') {
     return (
@@ -100,12 +102,10 @@ export default function App() {
         <div className="text-center mb-10">
           <div className="text-7xl mb-5 select-none">📦</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            Формирование поставки
+            Привет{username ? `, ${username}` : ''}!
           </h1>
           <p className="text-gray-500 text-sm leading-relaxed">
-            Создайте файл поставки — добавьте коробки,
-            <br />
-            заполните товары и получите Excel-файл в чат.
+            Для того, чтобы сформировать поставку, нажми кнопку ниже.
           </p>
         </div>
 
