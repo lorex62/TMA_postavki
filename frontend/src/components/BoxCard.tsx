@@ -1,8 +1,9 @@
-import { Box, Item } from '../types'
+import { Box, Item, Catalog } from '../types'
 
 interface Props {
   box: Box
-  skus: string[]
+  catalog: Catalog
+  skuNames: string[]
   onUpdate: (items: Item[]) => void
 }
 
@@ -12,18 +13,35 @@ function pluralItems(n: number): string {
   return 'товаров'
 }
 
-export default function BoxCard({ box, skus, onUpdate }: Props) {
+const activeCls =
+  'w-full text-sm text-gray-900 border border-gray-200 rounded-lg px-2 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent'
+const disabledCls =
+  'w-full text-sm text-gray-400 border border-gray-100 rounded-lg px-2 py-2 bg-gray-100 cursor-not-allowed'
+
+export default function BoxCard({ box, catalog, skuNames, onUpdate }: Props) {
   const addItem = () => {
-    onUpdate([...box.items, { id: Date.now(), sku: skus[0], qty: 1 }])
+    const sku = skuNames[0]
+    const cfg = catalog[sku]
+    onUpdate([...box.items, { id: Date.now(), sku, color: cfg.colors[0] ?? '', size: cfg.sizes[0] ?? '', qty: 1 }])
   }
 
-  const updateItem = (id: number, field: 'sku' | 'qty', value: string | number) => {
+  const updateItem = (id: number, field: keyof Omit<Item, 'id'>, value: string | number) => {
     onUpdate(
-      box.items.map(item =>
-        item.id === id
-          ? { ...item, [field]: field === 'qty' ? Math.max(0, Number(value)) : value }
-          : item,
-      ),
+      box.items.map(item => {
+        if (item.id !== id) return item
+        if (field === 'qty') return { ...item, qty: Math.max(0, Number(value)) }
+        if (field === 'sku') {
+          const newSku = String(value)
+          const cfg = catalog[newSku]
+          return {
+            ...item,
+            sku: newSku,
+            color: cfg?.colors[0] ?? '',
+            size: cfg?.sizes[0] ?? '',
+          }
+        }
+        return { ...item, [field]: value }
+      }),
     )
   }
 
@@ -42,59 +60,83 @@ export default function BoxCard({ box, skus, onUpdate }: Props) {
       </div>
 
       {/* Items list */}
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-3">
         {box.items.length === 0 && (
           <p className="text-gray-400 text-sm text-center py-2">Нет товаров</p>
         )}
 
-        {/* Column labels (shown only when there are items) */}
-        {box.items.length > 0 && (
-          <div className="flex items-center gap-2 px-1 pb-0.5">
-            <span className="w-5" />
-            <span className="flex-1 text-xs text-gray-400 font-medium">Артикул</span>
-            <span className="w-20 text-xs text-gray-400 font-medium text-center">Кол-во</span>
-            <span className="w-6" />
-          </div>
-        )}
+        {box.items.map((item, idx) => {
+          const cfg = catalog[item.sku]
+          const hasColors = cfg && cfg.colors.length > 0
+          const hasSizes  = cfg && cfg.sizes.length > 0
 
-        {box.items.map((item, idx) => (
-          <div key={item.id} className="flex items-center gap-2">
-            <span className="text-gray-400 text-xs w-5 text-right shrink-0">
-              {idx + 1}.
-            </span>
+          return (
+            <div key={item.id} className="border border-gray-100 rounded-xl p-2.5 space-y-2 bg-gray-50/50">
+              {/* Row 1: index + Артикул + delete */}
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 text-xs w-5 text-right shrink-0">{idx + 1}.</span>
+                <select
+                  value={item.sku}
+                  onChange={e => updateItem(item.id, 'sku', e.target.value)}
+                  className={activeCls}
+                >
+                  {skuNames.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => removeItem(item.id)}
+                  className="w-6 shrink-0 text-red-400 hover:text-red-600 transition-colors text-xl leading-none text-center"
+                  title="Удалить товар"
+                >
+                  ×
+                </button>
+              </div>
 
-            {/* SKU dropdown */}
-            <select
-              value={item.sku}
-              onChange={e => updateItem(item.id, 'sku', e.target.value)}
-              className="flex-1 text-sm border border-gray-200 rounded-lg px-2 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
-            >
-              {skus.map(sku => (
-                <option key={sku} value={sku}>
-                  {sku}
-                </option>
-              ))}
-            </select>
+              {/* Row 2: Цвет + Размер + Кол-во */}
+              <div className="flex items-center gap-2 pl-7">
+                {/* Цвет */}
+                {hasColors ? (
+                  <select
+                    value={item.color}
+                    onChange={e => updateItem(item.id, 'color', e.target.value)}
+                    className={activeCls}
+                  >
+                    {cfg.colors.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className={disabledCls + ' text-center'}>—</div>
+                )}
 
-            {/* Quantity input */}
-            <input
-              type="number"
-              min="1"
-              value={item.qty}
-              onChange={e => updateItem(item.id, 'qty', e.target.value)}
-              className="w-20 shrink-0 text-sm border border-gray-200 rounded-lg px-2 py-2 text-center bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
-            />
+                {/* Размер */}
+                {hasSizes ? (
+                  <select
+                    value={item.size}
+                    onChange={e => updateItem(item.id, 'size', e.target.value)}
+                    className="w-20 shrink-0 text-sm text-gray-900 border border-gray-200 rounded-lg px-2 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
+                  >
+                    {cfg.sizes.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-20 shrink-0 text-sm text-gray-400 border border-gray-100 rounded-lg px-2 py-2 text-center bg-gray-100 cursor-not-allowed">—</div>
+                )}
 
-            {/* Remove button */}
-            <button
-              onClick={() => removeItem(item.id)}
-              className="w-6 shrink-0 text-red-400 hover:text-red-600 transition-colors text-xl leading-none text-center"
-              title="Удалить товар"
-            >
-              ×
-            </button>
-          </div>
-        ))}
+                {/* Кол-во */}
+                <input
+                  type="number"
+                  min="1"
+                  value={item.qty}
+                  onChange={e => updateItem(item.id, 'qty', e.target.value)}
+                  className="w-16 shrink-0 text-sm text-gray-900 border border-gray-200 rounded-lg px-2 py-2 text-center bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Add item button */}

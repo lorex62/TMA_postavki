@@ -1,9 +1,18 @@
 import { useState, useEffect } from 'react'
 import WebApp from '@twa-dev/sdk'
-import { Box, Item } from './types'
+import { Box, Item, Catalog } from './types'
 import BoxCard from './components/BoxCard'
 
-const SKUS = ['SKU-001', 'SKU-002', 'SKU-003', 'SKU-004']
+export const CATALOG: Catalog = {
+  'Напульсники':      { colors: ['Чёрный', 'Красный', 'Синий', 'Серый', 'Голубой'], sizes: [] },
+  'Наколенники':      { colors: ['Чёрный', 'Красный', 'Синий', 'Серый'],            sizes: [] },
+  'Пуанты':           { colors: [], sizes: ['29','30','31','32','33','34','35','36','37','38','39','40','41','42'] },
+  'Скальники':        { colors: ['Голубой', 'Красный', 'Фиолетовый'],               sizes: ['32','33','34','35','36','37','38','39','40','41','42','43','44'] },
+  'Спортивные наборы':{ colors: [], sizes: [] },
+}
+
+const SKU_NAMES = Object.keys(CATALOG)
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 type Screen = 'home' | 'assembly'
@@ -12,6 +21,12 @@ function pluralBoxes(n: number): string {
   if (n === 1) return 'коробка'
   if (n >= 2 && n <= 4) return 'коробки'
   return 'коробок'
+}
+
+function makeFirstItem(): Item {
+  const sku = SKU_NAMES[0]
+  const cfg = CATALOG[sku]
+  return { id: Date.now(), sku, color: cfg.colors[0] ?? '', size: cfg.sizes[0] ?? '', qty: 1 }
 }
 
 export default function App() {
@@ -26,17 +41,15 @@ export default function App() {
   }, [])
 
   const handleStartNew = () => {
-    const firstItem: Item = { id: Date.now(), sku: SKUS[0], qty: 1 }
-    setBoxes([{ boxId: 1, items: [firstItem] }])
+    setBoxes([{ boxId: 1, items: [makeFirstItem()] }])
     setScreen('assembly')
     setError(null)
   }
 
   const handleAddBox = () => {
-    const firstItem: Item = { id: Date.now(), sku: SKUS[0], qty: 1 }
     setBoxes(prev => [
       ...prev,
-      { boxId: prev.length + 1, items: [firstItem] },
+      { boxId: prev.length + 1, items: [makeFirstItem()] },
     ])
   }
 
@@ -131,7 +144,8 @@ export default function App() {
           <BoxCard
             key={box.boxId}
             box={box}
-            skus={SKUS}
+            catalog={CATALOG}
+            skuNames={SKU_NAMES}
             onUpdate={items => handleUpdateBox(box.boxId, items)}
           />
         ))}
